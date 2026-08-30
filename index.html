@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Autopod</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+
+  <div class="topbar">
+    <button class="backbtn" id="backBtn">
+      <svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+      <span data-i18n="back">Zurück</span>
+      <span class="appversion appversion--back" id="appVersionLabelBack"></span>
+    </button>
+    <div class="apptitle" id="appTitle">Autopod <span class="appversion" id="appVersionLabel"></span></div>
+    <div class="clock" id="clockBox"><span id="clockTime">--:--</span></div>
+    <button class="settingsbtn" id="settingsBtn" aria-label="Einstellungen">
+      <svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 13.5a7.7 7.7 0 000-3l2-1.5-2-3.4-2.3.9a7.7 7.7 0 00-2.6-1.5L14 2h-4l-.5 2.4a7.7 7.7 0 00-2.6 1.5l-2.3-.9-2 3.4 2 1.5a7.7 7.7 0 000 3l-2 1.5 2 3.4 2.3-.9a7.7 7.7 0 002.6 1.5L10 22h4l.5-2.4a7.7 7.7 0 002.6-1.5l2.3.9 2-3.4-2-1.5z"/></svg>
+    </button>
+  </div>
+
+  <div class="header-progress-track" id="headerProgressTrack"><div class="header-progress-bar"></div></div>
+
+  <!-- Player: always visible, fixed position between topbar and content -->
+  <div class="player" id="player">
+    <div class="player-top">
+      <div class="player-art" id="playerArt"></div>
+      <div class="player-meta">
+        <div class="ep" id="playerEpisode" data-i18n="noEpisode">Keine Episode ausgewählt</div>
+        <div class="show" id="playerShow"></div>
+      </div>
+    </div>
+    <div class="player-controls">
+      <button class="ctrl-btn" id="skipBackBtn"></button>
+      <button class="ctrl-btn play" id="playPauseBtn">
+        <svg class="icon-play" viewBox="0 0 24 24"><path d="M7 4l13 8-13 8V4z" fill="currentColor" stroke="none"/></svg>
+        <svg class="icon-pause" viewBox="0 0 24 24" style="display:none"><rect x="6" y="4" width="4" height="16" rx="1" fill="currentColor" stroke="none"/><rect x="14" y="4" width="4" height="16" rx="1" fill="currentColor" stroke="none"/></svg>
+        <svg class="icon-spinner" viewBox="0 0 24 24" style="display:none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.4" fill="none" stroke-dasharray="42 14" stroke-linecap="round"/></svg>
+      </button>
+      <button class="ctrl-btn" id="skipFwdBtn"></button>
+      <button class="ctrl-btn" id="skipNextBtn" aria-label="Nächste Episode in Queue">
+        <svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5v14l10-7-10-7z" fill="currentColor" stroke="none"/><rect x="17" y="5" width="2.4" height="14" rx="1" fill="currentColor" stroke="none"/></svg>
+      </button>
+    </div>
+    <div class="player-progress">
+      <span id="playerPosLabel">0:00</span>
+      <div class="pbar" id="playerBar"><div class="pbar-fill" id="playerBarFill"></div></div>
+      <span id="playerDurLabel">0:00</span>
+    </div>
+    <div class="player-status" id="playerStatus"></div>
+  </div>
+
+  <div class="content" id="content">
+
+    <!-- HOME -->
+    <div class="screen" id="screen-home">
+      <div class="section-label" data-i18n="menu">Menü</div>
+      <div class="grid" id="homeGrid">
+        <div class="tile" data-nav="search">
+          <svg class="tile-icon" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5" class="di-fill"/><line x1="15.5" y1="15.5" x2="21" y2="21" class="di-stroke"/></svg>
+          <div class="label" data-i18n="search">Suchen</div>
+        </div>
+        <div class="tile" data-nav="subscriptions">
+          <svg class="tile-icon" viewBox="0 0 24 24"><path d="M6 3v16l6-4 6 4V3" class="di-fill"/></svg>
+          <div class="label" data-i18n="subscriptions">Meine Abos</div>
+        </div>
+        <div class="tile" data-nav="inbox">
+          <svg class="tile-icon" viewBox="0 0 24 24"><path d="M3 8l9-5 9 5v9l-9 5-9-5V8z" class="di-fill"/><circle cx="12" cy="12" r="2.4" class="di-dot"/></svg>
+          <div class="label" data-i18n="inbox">Inbox</div>
+        </div>
+        <div class="tile" data-nav="queue">
+          <svg class="tile-icon" viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6" class="di-stroke-accent"/><line x1="4" y1="12" x2="16" y2="12" class="di-stroke"/><line x1="4" y1="18" x2="12" y2="18" class="di-stroke"/></svg>
+          <div class="label" data-i18n="queue">Queue</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SEARCH -->
+    <div class="screen" id="screen-search" style="display:none">
+      <div class="searchbar-wrap">
+        <input type="text" id="searchInput" class="searchbar-input" data-i18n-placeholder="searchPlaceholder" placeholder="Podcast suchen…">
+      </div>
+      <div class="section-label" data-i18n="results">Ergebnisse</div>
+      <div class="scroll-list" id="searchResults"></div>
+    </div>
+
+    <!-- SUBSCRIPTIONS -->
+    <div class="screen" id="screen-subscriptions" style="display:none">
+      <div class="section-label" data-i18n="subscriptions">Meine Abos</div>
+      <div class="subs-grid-scroll"><div class="subs-grid" id="subscriptionsList"></div></div>
+    </div>
+
+    <!-- SHOW DETAIL / EPISODES -->
+    <div class="screen" id="screen-show" style="display:none">
+      <div class="show-header" id="showHeader"></div>
+      <div class="section-label" data-i18n="episodes">Episoden</div>
+      <div class="scroll-list" id="episodesList"></div>
+    </div>
+
+    <!-- NOW PLAYING (opened by tapping the player cover) -->
+    <div class="screen" id="screen-nowplaying" style="display:none">
+      <div class="scroll-list" id="nowPlayingContent"></div>
+    </div>
+
+    <!-- INBOX -->
+    <div class="screen" id="screen-inbox" style="display:none">
+      <div class="section-label" data-i18n="inbox">Inbox — Neue Episoden</div>
+      <div class="scroll-list" id="inboxList"></div>
+    </div>
+
+    <!-- QUEUE -->
+    <div class="screen" id="screen-queue" style="display:none">
+      <div class="section-label" id="queueLabel" data-i18n="queue">Warteschlange</div>
+      <div class="scroll-list" id="queueList"></div>
+    </div>
+
+  </div>
+
+  <!-- SETTINGS OVERLAY -->
+  <div class="overlay" id="settingsOverlay">
+    <div class="panel">
+      <div class="panel-header">
+        <button class="closex" id="closeSettingsBtn" aria-label="Schließen">✕</button>
+        <h3 data-i18n="settings">Einstellungen</h3>
+      </div>
+
+      <div class="panel-body">
+      <div class="settings-grid">
+        <div class="row">
+          <span data-i18n="language">Sprache</span>
+          <div class="seg-group" id="langSeg">
+            <button class="seg-btn" data-value="de">DE</button>
+            <button class="seg-btn" data-value="en">EN</button>
+          </div>
+        </div>
+
+        <div class="row">
+          <span data-i18n="theme">Darstellung</span>
+          <div class="seg-group" id="themeSeg">
+            <button class="seg-btn" data-value="system" data-i18n="themeSystem">System</button>
+            <button class="seg-btn" data-value="light" data-i18n="themeLight">Hell</button>
+            <button class="seg-btn" data-value="dark" data-i18n="themeDark">Dunkel</button>
+          </div>
+        </div>
+
+        <div class="row">
+          <span data-i18n="accentColor">Akzentfarbe</span>
+          <div class="swatch-group" id="accentSeg">
+            <button class="swatch" data-value="blue" style="background:#3b82f6" aria-label="Blau"></button>
+            <button class="swatch" data-value="red" style="background:#ef4444" aria-label="Rot"></button>
+            <button class="swatch" data-value="orange" style="background:#f59e0b" aria-label="Orange"></button>
+            <button class="swatch" data-value="green" style="background:#22c55e" aria-label="Grün"></button>
+            <button class="swatch" data-value="purple" style="background:#a855f7" aria-label="Lila"></button>
+          </div>
+        </div>
+
+        <div class="row">
+          <span data-i18n="fontSize">Schriftgröße</span>
+          <div class="seg-group" id="fontSizeSeg">
+            <button class="seg-btn" data-value="normal" data-i18n="fontSizeNormal">Normal</button>
+            <button class="seg-btn" data-value="large" data-i18n="fontSizeLarge">Groß</button>
+            <button class="seg-btn" data-value="xlarge" data-i18n="fontSizeXLarge">XL</button>
+          </div>
+        </div>
+
+        <div class="row">
+          <span data-i18n="skipBack">Zurück-Sprung</span>
+          <div class="seg-group" id="skipBackSeg">
+            <button class="seg-btn" data-value="10">10s</button>
+            <button class="seg-btn" data-value="15">15s</button>
+            <button class="seg-btn" data-value="30">30s</button>
+          </div>
+        </div>
+
+        <div class="row">
+          <span data-i18n="skipFwd">Vor-Sprung</span>
+          <div class="seg-group" id="skipFwdSeg">
+            <button class="seg-btn" data-value="10">10s</button>
+            <button class="seg-btn" data-value="15">15s</button>
+            <button class="seg-btn" data-value="30">30s</button>
+          </div>
+        </div>
+
+        <div class="row">
+          <span data-i18n="episodeLimit">Episoden/Podcast</span>
+          <div class="seg-group" id="episodeLimitSeg">
+            <button class="seg-btn" data-value="10">10</button>
+            <button class="seg-btn" data-value="25">25</button>
+            <button class="seg-btn" data-value="50">50</button>
+            <button class="seg-btn" data-value="0" data-i18n="all">Alle</button>
+          </div>
+        </div>
+
+        <div class="row">
+          <span data-i18n="idleTimeout">Auto-Home nach</span>
+          <div class="seg-group" id="idleTimeoutSeg">
+            <button class="seg-btn" data-value="20">20s</button>
+            <button class="seg-btn" data-value="40">40s</button>
+            <button class="seg-btn" data-value="60">60s</button>
+            <button class="seg-btn" data-value="0" data-i18n="off">Aus</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-label" data-i18n="gpodderSync">gpodder-Sync</div>
+      <div class="confirm-box">
+        <input type="text" id="gpodderServerUrl" data-i18n-placeholder="serverUrl" placeholder="https://dein-server.onrender.com">
+        <input type="text" id="gpodderUsername" data-i18n-placeholder="username" placeholder="Benutzername">
+        <input type="password" id="gpodderPassword" data-i18n-placeholder="password" placeholder="Passwort / Token">
+        <div class="confirm-actions">
+          <button class="seg-btn" id="gpodderTestBtn" data-i18n="testConnection">Verbindung testen</button>
+          <button class="seg-btn" id="gpodderSaveBtn" data-i18n="save">Speichern</button>
+        </div>
+        <div class="confirm-actions">
+          <button class="seg-btn" id="gpodderForceSyncBtn" data-i18n="forceSync">Force Sync</button>
+          <span id="forceSyncResult" class="sync-result-icon" style="display:none"></span>
+        </div>
+        <div class="diag-box" id="gpodderStatus" style="display:none"></div>
+      </div>
+      <div class="about-line" data-i18n="credentialsNote">Zugangsdaten werden nur lokal auf diesem Gerät gespeichert, nie im App-Code.</div>
+
+      <div class="about-line" style="text-align:center; margin-top:4px;">Autopod <span id="aboutVersion"></span> · © 2026 Martin Werthammer</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+<script src="i18n.js"></script>
+<script src="api.js"></script>
+<script src="gpodder.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
