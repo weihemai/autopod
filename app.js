@@ -736,6 +736,12 @@ document.getElementById('gpodderForceSyncBtn').addEventListener('click', async (
   results.push(await pullPositionsFromGpodder()
     .then(r => r.ok ? { ok:true, what:t('syncPull') } : { ok:false, what:t('syncPull'), error:r.reason }));
 
+  // 0b) Pull the subscription list from AntennaPod (source of truth)
+  // before pushing anything back, so a fresh device actually receives
+  // subscriptions instead of just echoing its (empty) local list.
+  results.push(await syncSubscriptionsFromGpodder()
+    .then(()=>({ ok:true, what:t('syncSubsPull') })).catch(e=>({ ok:false, what:t('syncSubsPull'), error:e.message })));
+
   // 1) Push the full current subscription list.
   results.push(await gpodderPushSubscriptionChange(state.subscriptions.map(s=>s.feedUrl), [])
     .then(()=>({ ok:true, what:t('syncSubs') })).catch(e=>({ ok:false, what:t('syncSubs'), error:e.message })));
@@ -785,16 +791,22 @@ document.getElementById('aboutVersion').textContent = 'v' + APP_VERSION;
 updateSkipLabels();
 showScreen('home');
 
+// Pull the subscription list from gpodder and merge it into local
+// state, keeping known metadata (title/art) and adding bare entries
+// for anything new from the server. Used both at startup and on
+// every Force Sync, since AntennaPod is the source of truth.
+async function syncSubscriptionsFromGpodder(){
+  const feedUrls = await gpodderPullSubscriptions();
+  const known = new Map(state.subscriptions.map(s=>[s.feedUrl, s]));
+  state.subscriptions = feedUrls.map(url => known.get(url) || { feedUrl:url, title:url, artworkUrl:'', author:'' });
+  saveSubscriptions();
+  if(document.getElementById('screen-subscriptions').style.display !== 'none') renderSubscriptions();
+  await resolveUnknownSubscriptionMetadata();
+}
+
 // Best-effort initial subscription sync from gpodder if configured.
 if(gpodderConfigured()){
-  gpodderPullSubscriptions().then(feedUrls=>{
-    // Merge: keep local metadata (title/art) for feeds we already know,
-    // add bare entries for anything new from the server.
-    const known = new Map(state.subscriptions.map(s=>[s.feedUrl, s]));
-    state.subscriptions = feedUrls.map(url => known.get(url) || { feedUrl:url, title:url, artworkUrl:'', author:'' });
-    saveSubscriptions();
-    resolveUnknownSubscriptionMetadata();
-  }).catch(e=>console.warn('Initial gpodder subscription sync failed', e));
+  syncSubscriptionsFromGpodder().catch(e=>console.warn('Initial gpodder subscription sync failed', e));
   pullPositionsFromGpodder().catch(e=>console.warn('Initial position sync failed', e));
 }else{
   // Even without gpodder configured, fix up any subscriptions saved by
