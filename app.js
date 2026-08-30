@@ -684,7 +684,7 @@ wireSegGroup('langSeg', 'autopod_lang', currentLang(), (val)=>{
 });
 
 // gpodder settings
-document.getElementById('gpodderServerUrl').value = localStorage.getItem('autopod_gpodder_url') || '';
+document.getElementById('gpodderServerUrl').value = localStorage.getItem('autopod_gpodder_url') || 'https://gopodder-latest.onrender.com/';
 document.getElementById('gpodderUsername').value = localStorage.getItem('autopod_gpodder_user') || '';
 document.getElementById('gpodderPassword').value = localStorage.getItem('autopod_gpodder_pass') || '';
 
