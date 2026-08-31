@@ -2,7 +2,7 @@
   --bg:#0a0a0a; --panel:#121212; --tile:#181818; --tile-hover:#232323;
   --accent:#3b82f6; --accent-dim:rgba(59,130,246,.35);
   --text:#ffffff; --text-dim:#a7a7a7; --line:#282828;
-  --fs-mult:1;
+  --fs-mult:1; --kb-inset:0px;
 }
 [data-fontsize="large"]{ --fs-mult:1.18; }
 [data-fontsize="xlarge"]{ --fs-mult:1.36; }
@@ -85,6 +85,11 @@ html,body{ margin:0; padding:0; height:100%; background:var(--bg); color:var(--t
 
 .searchbar-wrap{ flex:none; }
 .searchbar-input{ width:100%; background:var(--tile); border:1px solid var(--line); border-radius:14px; padding:18px 20px; font-size:20px; color:var(--text); }
+/* --kb-inset (tracked in app.js via the VisualViewport API) compresses
+   the search screen by exactly the on-screen keyboard's height, so the
+   results list always resizes into the space that's actually visible
+   above it instead of being covered and needing a manual dismiss. */
+#screen-search{ padding-bottom:var(--kb-inset,0px); transition:padding-bottom .12s ease-out; }
 
 .result-row{ display:flex; gap:12px; align-items:flex-start; background:var(--tile); border-radius:14px; padding:12px; cursor:default; }
 .result-art{ width:68px; height:68px; border-radius:12px; background:linear-gradient(135deg,#3a3a6a,#6a3a5a); flex:none; background-size:cover; background-position:center; }

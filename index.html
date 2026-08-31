@@ -82,13 +82,14 @@
       </div>
     </div>
 
-    <!-- SEARCH -->
+    <!-- SEARCH — input docked below the results: the on-screen keyboard
+         opens directly under it and never covers a hit. -->
     <div class="screen" id="screen-search" style="display:none">
+      <div class="section-label" data-i18n="results">Ergebnisse</div>
+      <div class="scroll-list" id="searchResults"></div>
       <div class="searchbar-wrap">
         <input type="text" id="searchInput" class="searchbar-input" data-i18n-placeholder="searchPlaceholder" placeholder="Podcast suchen…">
       </div>
-      <div class="section-label" data-i18n="results">Ergebnisse</div>
-      <div class="scroll-list" id="searchResults"></div>
     </div>
 
     <!-- SUBSCRIPTIONS -->

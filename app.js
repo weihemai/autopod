@@ -11,6 +11,26 @@ setVh();
 window.addEventListener('resize', setVh);
 window.addEventListener('orientationchange', setVh);
 
+// ---- On-screen keyboard inset ----
+// window.innerHeight above mostly does NOT change when the on-screen
+// keyboard opens (only the visual viewport shrinks), so the keyboard
+// used to sit as a plain overlay on top of the fixed-height layout and
+// bury the bottom search results until dismissed by hand. The
+// VisualViewport API is the one that actually reports the keyboard
+// opening; we expose its height as --kb-inset so the search screen
+// (see #screen-search in style.css) can compress itself into exactly
+// the space that's still visible above the keyboard.
+function updateKeyboardInset(){
+  if(!window.visualViewport) return;
+  const inset = Math.max(0, window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop);
+  document.documentElement.style.setProperty('--kb-inset', inset + 'px');
+}
+if(window.visualViewport){
+  window.visualViewport.addEventListener('resize', updateKeyboardInset);
+  window.visualViewport.addEventListener('scroll', updateKeyboardInset);
+  updateKeyboardInset();
+}
+
 // ---- Theme: system by default, optional override ----
 function applyTheme(){
   const override = localStorage.getItem('autopod_theme'); // 'light' | 'dark' | null (=system)
