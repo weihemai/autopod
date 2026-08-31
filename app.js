@@ -1,7 +1,7 @@
 /*
    VERSIONING: bump APP_VERSION on every meaningful change from here on
 */
-const APP_VERSION = '0.7.1';
+const APP_VERSION = '0.7.2';
 
 // ---- --vh fix for embedded car browsers with unreliable 100vh ----
 function setVh(){
@@ -548,10 +548,13 @@ if('mediaSession' in navigator){
     navigator.mediaSession.setActionHandler('seekbackward', ()=> skipSeconds(-skipBackAmount()));
     navigator.mediaSession.setActionHandler('seekforward', ()=> skipSeconds(skipFwdAmount()));
     // Some head units map their steering-wheel skip buttons to
-    // previous/next-track rather than seek — wire both so it works
-    // regardless of how this particular car forwards the controls.
+    // previous/next-track rather than seek. Map both to the same
+    // rewind/fast-forward behavior as the on-screen -10/+30 buttons —
+    // jumping to a different queue episode from a physical skip button
+    // would be surprising, so that stays reserved for the dedicated
+    // ⏭ on-screen button only.
     navigator.mediaSession.setActionHandler('previoustrack', ()=> skipSeconds(-skipBackAmount()));
-    navigator.mediaSession.setActionHandler('nexttrack', ()=> skipToNextInQueue());
+    navigator.mediaSession.setActionHandler('nexttrack', ()=> skipSeconds(skipFwdAmount()));
   }catch(e){ /* some browsers don't support all action handlers: ignore */ }
 }
 
