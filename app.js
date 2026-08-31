@@ -1,7 +1,7 @@
 /*
    VERSIONING: bump APP_VERSION on every meaningful change from here on
 */
-const APP_VERSION = '0.6.0';
+const APP_VERSION = '0.7.1';
 
 // ---- --vh fix for embedded car browsers with unreliable 100vh ----
 function setVh(){
@@ -294,6 +294,7 @@ function episodeCardHtml(ep, cardId, opts={}){
     <div class="ep-card${played ? ' played' : ''}" data-card-id="${cardId}">
       <div class="ep-card-top">
         <div class="ep-art" data-goto-show="1" style="background-image:url('${escapeHtml(ep.artworkUrl||'')}')"></div>
+        <button class="play-btn" data-play-card aria-label="${t('playNow')}">▶</button>
         <div class="ep-card-body">
           <div class="t">${escapeHtml(ep.title)}</div>
           ${ep.showTitle ? `<div class="show-name">${escapeHtml(ep.showTitle)}</div>` : ''}
@@ -301,10 +302,9 @@ function episodeCardHtml(ep, cardId, opts={}){
           <div class="prog"><div class="prog-fill" style="width:${progressPct}%"></div></div>
         </div>
         <div class="ep-card-actions">
-          <button class="icon-btn" data-play-card aria-label="${t('playNow')}">▶</button>
           ${showRemove
-            ? `<button class="icon-btn remove-btn" data-remove-card aria-label="${t('removeFromQueue')}">✕</button>`
-            : `<button class="icon-btn" data-addqueue-card aria-label="${t('addToQueue')}">+</button>`}
+            ? `<button class="action-btn remove-btn" data-remove-card aria-label="${t('removeFromQueue')}">✕</button>`
+            : `<button class="action-btn" data-addqueue-card aria-label="${t('addToQueue')}">+</button>`}
         </div>
       </div>
       <div class="ep-card-shownotes">${ep.shownotes || ''}</div>
@@ -507,6 +507,7 @@ function playEpisode(ep){
   document.getElementById('playerArt').style.backgroundImage = ep.artworkUrl ? `url('${ep.artworkUrl}')` : 'none';
   document.getElementById('playerStatus').textContent = '';
   setPlayIcon('spinner');
+  updateMediaSessionMetadata(ep);
 
   // Resume from a position synced in from AntennaPod/gpodder, if any.
   const pos = ep.audioUrl ? positionsByUrl.get(ep.audioUrl) : null;
@@ -515,6 +516,43 @@ function playEpisode(ep){
     const onLoaded = ()=>{ audioEl.currentTime = resumeTo; audioEl.removeEventListener('loadedmetadata', onLoaded); };
     audioEl.addEventListener('loadedmetadata', onLoaded);
   }
+}
+
+// ---- MediaSession: show real title/cover in the car's native media
+// widget, and let the steering wheel skip/play/pause buttons control
+// playback (the car maps its physical controls to these standard
+// browser media-session actions, not to on-page button clicks).
+function updateMediaSessionMetadata(ep){
+  if(!('mediaSession' in navigator) || !ep) return;
+  try{
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: ep.title || 'Autopod',
+      artist: ep.showTitle || '',
+      album: ep.showTitle || '',
+      artwork: ep.artworkUrl ? [
+        { src: ep.artworkUrl, sizes: '256x256', type: 'image/png' },
+        { src: ep.artworkUrl, sizes: '512x512', type: 'image/png' }
+      ] : []
+    });
+  }catch(e){ /* MediaMetadata not supported in this browser: ignore */ }
+}
+function setMediaSessionPlaybackState(state){
+  if('mediaSession' in navigator){
+    try{ navigator.mediaSession.playbackState = state; }catch(e){}
+  }
+}
+if('mediaSession' in navigator){
+  try{
+    navigator.mediaSession.setActionHandler('play', togglePlayPause);
+    navigator.mediaSession.setActionHandler('pause', togglePlayPause);
+    navigator.mediaSession.setActionHandler('seekbackward', ()=> skipSeconds(-skipBackAmount()));
+    navigator.mediaSession.setActionHandler('seekforward', ()=> skipSeconds(skipFwdAmount()));
+    // Some head units map their steering-wheel skip buttons to
+    // previous/next-track rather than seek — wire both so it works
+    // regardless of how this particular car forwards the controls.
+    navigator.mediaSession.setActionHandler('previoustrack', ()=> skipSeconds(-skipBackAmount()));
+    navigator.mediaSession.setActionHandler('nexttrack', ()=> skipToNextInQueue());
+  }catch(e){ /* some browsers don't support all action handlers: ignore */ }
 }
 
 function setPlayIcon(mode){ // 'play' | 'pause' | 'spinner'
@@ -542,8 +580,8 @@ function stopPositionReportTimer(){
   if(positionReportTimer){ clearInterval(positionReportTimer); positionReportTimer = null; }
 }
 
-audioEl.addEventListener('playing', ()=>{ state.isPlaying = true; setPlayIcon('pause'); startPositionReportTimer(); });
-audioEl.addEventListener('pause', ()=>{ state.isPlaying = false; setPlayIcon('play'); stopPositionReportTimer(); reportPlaybackPosition(); });
+audioEl.addEventListener('playing', ()=>{ state.isPlaying = true; setPlayIcon('pause'); startPositionReportTimer(); setMediaSessionPlaybackState('playing'); });
+audioEl.addEventListener('pause', ()=>{ state.isPlaying = false; setPlayIcon('play'); stopPositionReportTimer(); reportPlaybackPosition(); setMediaSessionPlaybackState('paused'); });
 audioEl.addEventListener('waiting', ()=> setPlayIcon('spinner'));
 audioEl.addEventListener('error', ()=>{
   document.getElementById('playerStatus').textContent = t('streamUnavailable');
@@ -554,6 +592,15 @@ audioEl.addEventListener('timeupdate', ()=>{
   document.getElementById('playerDurLabel').textContent = fmtTime(audioEl.duration);
   const pct = audioEl.duration ? (audioEl.currentTime/audioEl.duration*100) : 0;
   document.getElementById('playerBarFill').style.width = pct + '%';
+  if('mediaSession' in navigator && 'setPositionState' in navigator.mediaSession && isFinite(audioEl.duration) && audioEl.duration > 0){
+    try{
+      navigator.mediaSession.setPositionState({
+        duration: audioEl.duration,
+        playbackRate: audioEl.playbackRate || 1,
+        position: Math.min(audioEl.currentTime, audioEl.duration)
+      });
+    }catch(e){ /* ignore */ }
+  }
 });
 audioEl.addEventListener('ended', ()=>{
   stopPositionReportTimer();
@@ -637,8 +684,8 @@ document.getElementById('playerBar').addEventListener('click', (ev)=>{
 });
 
 function updateSkipLabels(){
-  document.getElementById('skipBackBtn').innerHTML = `<span style="font-size:11px;font-weight:800">-${skipBackAmount()}</span>`;
-  document.getElementById('skipFwdBtn').innerHTML = `<span style="font-size:11px;font-weight:800">+${skipFwdAmount()}</span>`;
+  document.getElementById('skipBackBtn').innerHTML = `<span style="font-size:16px;font-weight:800">-${skipBackAmount()}</span>`;
+  document.getElementById('skipFwdBtn').innerHTML = `<span style="font-size:16px;font-weight:800">+${skipFwdAmount()}</span>`;
 }
 
 // ---- Settings ----
@@ -684,7 +731,7 @@ wireSegGroup('langSeg', 'autopod_lang', currentLang(), (val)=>{
 });
 
 // gpodder settings
-document.getElementById('gpodderServerUrl').value = localStorage.getItem('autopod_gpodder_url') || 'https://gopodder-latest.onrender.com/';
+document.getElementById('gpodderServerUrl').value = localStorage.getItem('autopod_gpodder_url') || '';
 document.getElementById('gpodderUsername').value = localStorage.getItem('autopod_gpodder_user') || '';
 document.getElementById('gpodderPassword').value = localStorage.getItem('autopod_gpodder_pass') || '';
 
@@ -736,12 +783,6 @@ document.getElementById('gpodderForceSyncBtn').addEventListener('click', async (
   results.push(await pullPositionsFromGpodder()
     .then(r => r.ok ? { ok:true, what:t('syncPull') } : { ok:false, what:t('syncPull'), error:r.reason }));
 
-  // 0b) Pull the subscription list from AntennaPod (source of truth)
-  // before pushing anything back, so a fresh device actually receives
-  // subscriptions instead of just echoing its (empty) local list.
-  results.push(await syncSubscriptionsFromGpodder()
-    .then(()=>({ ok:true, what:t('syncSubsPull') })).catch(e=>({ ok:false, what:t('syncSubsPull'), error:e.message })));
-
   // 1) Push the full current subscription list.
   results.push(await gpodderPushSubscriptionChange(state.subscriptions.map(s=>s.feedUrl), [])
     .then(()=>({ ok:true, what:t('syncSubs') })).catch(e=>({ ok:false, what:t('syncSubs'), error:e.message })));
@@ -791,22 +832,16 @@ document.getElementById('aboutVersion').textContent = 'v' + APP_VERSION;
 updateSkipLabels();
 showScreen('home');
 
-// Pull the subscription list from gpodder and merge it into local
-// state, keeping known metadata (title/art) and adding bare entries
-// for anything new from the server. Used both at startup and on
-// every Force Sync, since AntennaPod is the source of truth.
-async function syncSubscriptionsFromGpodder(){
-  const feedUrls = await gpodderPullSubscriptions();
-  const known = new Map(state.subscriptions.map(s=>[s.feedUrl, s]));
-  state.subscriptions = feedUrls.map(url => known.get(url) || { feedUrl:url, title:url, artworkUrl:'', author:'' });
-  saveSubscriptions();
-  if(document.getElementById('screen-subscriptions').style.display !== 'none') renderSubscriptions();
-  await resolveUnknownSubscriptionMetadata();
-}
-
 // Best-effort initial subscription sync from gpodder if configured.
 if(gpodderConfigured()){
-  syncSubscriptionsFromGpodder().catch(e=>console.warn('Initial gpodder subscription sync failed', e));
+  gpodderPullSubscriptions().then(feedUrls=>{
+    // Merge: keep local metadata (title/art) for feeds we already know,
+    // add bare entries for anything new from the server.
+    const known = new Map(state.subscriptions.map(s=>[s.feedUrl, s]));
+    state.subscriptions = feedUrls.map(url => known.get(url) || { feedUrl:url, title:url, artworkUrl:'', author:'' });
+    saveSubscriptions();
+    resolveUnknownSubscriptionMetadata();
+  }).catch(e=>console.warn('Initial gpodder subscription sync failed', e));
   pullPositionsFromGpodder().catch(e=>console.warn('Initial position sync failed', e));
 }else{
   // Even without gpodder configured, fix up any subscriptions saved by

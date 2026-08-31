@@ -21,7 +21,7 @@ const I18N = {
     streamUnavailable:'Stream nicht erreichbar', savedLocally:'Gespeichert (nur lokal auf diesem Gerät).',
     testing:'Teste…', connectionOk:'Verbindung erfolgreich.', connectionUnexpected:'Server antwortete, aber nicht wie erwartet.',
     syncing:'Synchronisiere…', notConfiguredMsg:'Nicht konfiguriert — Server-URL/Nutzername/Passwort speichern und erneut versuchen.',
-    syncOkMsg:'Sync erfolgreich', syncSubs:'Abos', syncSubsPull:'Abos abrufen', syncStatus:'Status', syncPosition:'Position', syncQueue:'Queue', syncPull:'Positionen abrufen'
+    syncOkMsg:'Sync erfolgreich', syncSubs:'Abos', syncStatus:'Status', syncPosition:'Position', syncQueue:'Queue', syncPull:'Positionen abrufen'
   },
   en: {
     back:'Back', menu:'Menu', search:'Search', subscriptions:'My subscriptions',
@@ -45,7 +45,7 @@ const I18N = {
     streamUnavailable:'Stream unavailable', savedLocally:'Saved (only stored locally on this device).',
     testing:'Testing…', connectionOk:'Connection successful.', connectionUnexpected:'Server responded, but not as expected.',
     syncing:'Syncing…', notConfiguredMsg:'Not configured — save server URL/username/password and try again.',
-    syncOkMsg:'Sync successful', syncSubs:'Subscriptions', syncSubsPull:'Pull subscriptions', syncStatus:'Status', syncPosition:'Position', syncQueue:'Queue', syncPull:'Pull positions'
+    syncOkMsg:'Sync successful', syncSubs:'Subscriptions', syncStatus:'Status', syncPosition:'Position', syncQueue:'Queue', syncPull:'Pull positions'
   }
 };
 
