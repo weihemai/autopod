@@ -95,7 +95,7 @@ html,body{ margin:0; padding:0; height:100%; background:var(--bg); color:var(--t
 .result-meta .desc p{ margin:0 0 4px 0; }
 .result-actions{ display:flex; flex-direction:column; gap:8px; flex:none; align-items:center; }
 .sub-btn{ background:var(--accent); color:#fff; font-size:12px; font-weight:800; padding:8px 14px; border-radius:20px; flex:none; border:none; }
-.icon-btn{ width:52px; height:52px; border-radius:50%; background:var(--panel); border:2px solid var(--line); display:flex; align-items:center; justify-content:center; flex:none; color:var(--text-dim); font-size:24px; cursor:pointer; }
+.icon-btn{ width:64px; height:64px; border-radius:50%; background:var(--panel); border:2px solid var(--line); display:flex; align-items:center; justify-content:center; flex:none; color:var(--text-dim); font-size:30px; cursor:pointer; }
 .episodes-btn{ background:var(--tile-hover); color:var(--text); font-size:12px; font-weight:700; padding:8px 12px; border-radius:10px; border:1px solid var(--line); white-space:nowrap; cursor:pointer; }
 
 .show-header{ display:flex; gap:14px; align-items:center; flex:none; }
@@ -118,7 +118,7 @@ html,body{ margin:0; padding:0; height:100%; background:var(--bg); color:var(--t
 @keyframes spin{ from{ transform:rotate(0deg); } to{ transform:rotate(360deg); } }
 
 /* ---- Expandable episode cards (episode list + inbox) ---- */
-.ep-card{ background:var(--tile); border-radius:16px; padding:0; cursor:pointer; overflow:hidden; }
+.ep-card{ background:var(--tile); border-radius:16px; padding:0; cursor:pointer; overflow:hidden; flex:none; }
 .ep-card-top{ display:flex; align-items:stretch; min-height:108px; }
 .ep-card .ep-art{ width:108px; height:108px; background:linear-gradient(135deg,#3a3a6a,#6a3a5a); background-size:cover; background-position:center; flex:none; cursor:pointer; }
 .ep-card .play-btn{ width:108px; height:108px; flex:none; border:none; background:var(--accent); color:#fff; font-size:34px; display:flex; align-items:center; justify-content:center; cursor:pointer; border-left:2px solid rgba(255,255,255,.2); }
@@ -166,8 +166,8 @@ html,body{ margin:0; padding:0; height:100%; background:var(--bg); color:var(--t
 
 /* ---- Subscriptions: fixed 3-column grid, not responsive, uniform square covers ---- */
 .subs-grid-scroll{ flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; }
-.subs-grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; justify-items:center; }
-.subs-card{ background:var(--tile); border-radius:12px; padding:8px; display:flex; flex-direction:column; align-items:center; gap:6px; cursor:pointer; width:100%; }
+.subs-grid{ display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:10px; }
+.subs-card{ background:var(--tile); border-radius:12px; padding:8px; display:flex; flex-direction:column; align-items:center; gap:6px; cursor:pointer; width:100%; min-width:0; flex:none; }
 .subs-card .subs-art{ width:96px; height:96px; border-radius:9px; background:linear-gradient(135deg,#3a3a6a,#6a3a5a); background-size:cover; background-position:center; flex:none; }
 .subs-card .subs-title{ font-size:calc(16px * var(--fs-mult)); font-weight:700; text-align:center; line-height:1.25; max-height:calc(1.25em * 2); overflow:hidden; width:100%; }
 

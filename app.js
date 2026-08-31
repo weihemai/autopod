@@ -1,7 +1,7 @@
 /*
    VERSIONING: bump APP_VERSION on every meaningful change from here on
 */
-const APP_VERSION = '0.7.2';
+const APP_VERSION = '0.7.4';
 
 // ---- --vh fix for embedded car browsers with unreliable 100vh ----
 function setVh(){
@@ -522,17 +522,29 @@ function playEpisode(ep){
 // widget, and let the steering wheel skip/play/pause buttons control
 // playback (the car maps its physical controls to these standard
 // browser media-session actions, not to on-page button clicks).
+function guessImageMimeType(url){
+  const ext = (url.split('?')[0].split('.').pop() || '').toLowerCase();
+  if(ext === 'png') return 'image/png';
+  if(ext === 'webp') return 'image/webp';
+  if(ext === 'gif') return 'image/gif';
+  return 'image/jpeg'; // most podcast artwork is jpg — safe default over the previous hardcoded png
+}
+
 function updateMediaSessionMetadata(ep){
   if(!('mediaSession' in navigator) || !ep) return;
   try{
+    const type = ep.artworkUrl ? guessImageMimeType(ep.artworkUrl) : '';
     navigator.mediaSession.metadata = new MediaMetadata({
       title: ep.title || 'Autopod',
       artist: ep.showTitle || '',
       album: ep.showTitle || '',
-      artwork: ep.artworkUrl ? [
-        { src: ep.artworkUrl, sizes: '256x256', type: 'image/png' },
-        { src: ep.artworkUrl, sizes: '512x512', type: 'image/png' }
-      ] : []
+      // We don't know the real pixel dimensions of podcast artwork
+      // ahead of time, so declare the same image under several common
+      // sizes — the OS picks whichever matches its widget best rather
+      // than skipping the artwork entirely for a size mismatch.
+      artwork: ep.artworkUrl ? [96,128,192,256,384,512].map(s => ({
+        src: ep.artworkUrl, sizes: `${s}x${s}`, type
+      })) : []
     });
   }catch(e){ /* MediaMetadata not supported in this browser: ignore */ }
 }
