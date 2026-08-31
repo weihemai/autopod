@@ -55,9 +55,16 @@ async function gpodderTestConnection(){
 // Pull the current subscription list (feed URLs) from the server.
 // AntennaPod is the source of truth, so this simply replaces the
 // local list rather than attempting a merge.
+//
+// Deliberately uses the account-wide `/subscriptions/{username}.json`
+// endpoint (aggregated across all of the user's devices) rather than
+// the per-device `/api/2/subscriptions/{username}/{deviceid}.json`
+// one: this device (`autopod-car`) has never synced with AntennaPod's
+// own device, so the per-device list starts out empty and would stay
+// that way forever without an explicit AntennaPod-side device link.
 async function gpodderPullSubscriptions(){
   const c = gpodderConfig();
-  const res = await gpodderRequest(`/api/2/subscriptions/${encodeURIComponent(c.username)}/${GPODDER_DEVICE_ID}.json`);
+  const res = await gpodderRequest(`/subscriptions/${encodeURIComponent(c.username)}.json`);
   return await res.json(); // array of feed URLs
 }
 
